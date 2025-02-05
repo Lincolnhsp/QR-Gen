@@ -1,5 +1,6 @@
 # QR-Gen
-Gerador de QR Code e Cifrador
+
+#Gerador de QR Code e Cifrador
 ![image](https://github.com/user-attachments/assets/e9a9634e-69d5-4818-8280-67b6ef6145bd)
 Solução simples, objetiva e rápida para geração de QR Codes, e codificar texto para envio seguro por mensageiros e e-mail.
 Recomendo utilização em camadas para segurança máxima e dificuldade de quebrar o código usando força-bruta.
