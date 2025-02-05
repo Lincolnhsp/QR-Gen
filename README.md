@@ -1,7 +1,10 @@
 # QR-Gen
 
 Gerador de QR Code e Criptografador de Texto
-![image](https://github.com/user-attachments/assets/e9a9634e-69d5-4818-8280-67b6ef6145bd)
+![image](https://github.com/user-attachments/assets/84b083e4-0289-4baf-a335-6a3a721f27bb)
+
+Faça o teste de descriptografar. Chave na imagem!
+U2FsdGVkX19xpjlBkq/X3Q4g7btQz36wojZIB6fwSIHIB2kSVKn575E/USVIce3ZUZpnuNqe80PNUR+qHm9RUg==
 
 Solução simples, objetiva e rápida para geração de QR Codes, e codificar texto para envio seguro por mensageiros e e-mail.
 Recomendo utilização em camadas para segurança máxima e dificuldade de quebrar o código usando força-bruta.
