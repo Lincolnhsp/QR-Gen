@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cifrador de Texto Avançado e Gerador de QR Code</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsencrypt/3.2.1/jsencrypt.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2196F3;
+            --primary-light: #64B5F6;
+            --primary-dark: #1976D2;
+            --navy-blue: #000080;
+            --white: #FFFFFF;
+            --gray-light: #F5F5F5;
+            --gray: #9E9E9E;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--gray-light);
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: var(--white);
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 95%;
+            max-width: 1000px;
+        }
+        .header {
+            background-color: var(--primary-color);
+            color: var(--white);
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .header::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to bottom right,
+                rgba(255, 255, 255, 0.1),
+                rgba(255, 255, 255, 0.05)
+            );
+            transform: rotate(30deg);
+        }
+        h1 {
+            margin: 0;
+            font-size: 2.5em;
+            position: relative;
+            text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            background-color: var(--primary-light);
+        }
+        .tab {
+            flex: 1;
+            padding: 15px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.3s, box-shadow 0.3s;
+            color: var(--white);
+            font-weight: bold;
+            min-width: 120px;
+            border: 1px solid var(--navy-blue);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .tab:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .tab.active {
+            background-color: var(--white);
+            color: var(--primary-color);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .content {
+            padding: 20px;
+        }
+        textarea, input[type="text"], select {
+            width: 100%;
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        textarea {
+            height: 150px;
+            resize: vertical;
+        }
+        textarea:focus, input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.1);
+        }
+        button {
+            display: inline-block;
+            width: calc(50% - 5px);
+            padding: 15px;
+            background-color: var(--primary-color);
+            color: var(--white);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.3s, transform 0.1s;
+            margin-bottom: 20px;
+        }
+        button:last-child {
+            margin-left: 10px;
+        }
+        button:hover {
+            background-color: var(--primary-dark);
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+        .key-input, .qr-options {
+            margin-bottom: 20px;
+        }
+        .key-input label, .qr-options label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--gray);
+        }
+        #qrCode {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .download-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .download-buttons button {
+            width: calc(33% - 5px);
+            margin-left: 0;
+        }
+        .slider-container {
+            margin-bottom: 20px;
+        }
+        .slider-container label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--gray);
+        }
+        input[type="range"] {
+            width: 100%;
+        }
+        .algorithm-info {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: var(--gray-light);
+            border-radius: 5px;
+            font-size: 14px;
+        }
+		 footer {
+            position: fixed; /* Fixa o rodapé na parte inferior da tela */
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            background-color: #f1f1f1; /* Cor de fundo do rodapé */
+            color: #333; /* Cor do texto */
+            text-align: center; /* Centraliza o texto */
+            padding: 10px 0; /* Espaçamento interno */
+            font-family: Arial, sans-serif; /* Fonte do texto */
+            font-size: 12px; /* Tamanho da fonte */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Cifrador de Texto Avançado e Gerador de QR Code</h1>
+        </div>
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('qr')" title="Geração de código QR">QR Code</div>
+            <div class="tab" onclick="switchTab('3des')" title="Criptografia e descriptografia 3DES">3DES</div>
+            <div class="tab" onclick="switchTab('aes')" title="Criptografia e descriptografia AES-256">AES-256</div>
+            <div class="tab" onclick="switchTab('base64')" title="Codificação e decodificação Base64">Base64</div>
+            <div class="tab" onclick="switchTab('des')" title="Criptografia e descriptografia DES">DES</div>
+            <div class="tab" onclick="switchTab('md5')" title="Geração e validação de hash MD5">MD5</div>
+            <div class="tab" onclick="switchTab('rot13')" title="Cifra ROT13">ROT13</div>
+            <div class="tab" onclick="switchTab('rsa')" title="Criptografia e descriptografia RSA">RSA</div>
+            <div class="tab" onclick="switchTab('sha256')" title="Hash SHA-256">SHA-256</div>
+            <div class="tab" onclick="switchTab('xor')" title="Cifra XOR">XOR</div>
+        </div>
+        <div class="content">
+            <textarea id="input" placeholder="Digite o texto para processar" title="Insira o texto que deseja processar"></textarea>
+            <div id="keyInput" class="key-input" style="display: none;">
+                <label for="key" title="Chave para criptografia/descriptografia">Chave de Criptografia:</label>
+                <input type="text" id="key" placeholder="Digite a chave de criptografia" title="Insira a chave para criptografia/descriptografia">
+            </div>
+            <div id="rsaKeyInput" class="key-input" style="display: none;">
+                <label for="publicKey" title="Chave pública RSA">Chave Pública RSA:</label>
+                <textarea id="publicKey" placeholder="Cole a chave pública RSA aqui" title="Insira a chave pública RSA para criptografia"></textarea>
+                <label for="privateKey" title="Chave privada RSA">Chave Privada RSA:</label>
+                <textarea id="privateKey" placeholder="Cole a chave privada RSA aqui" title="Insira a chave privada RSA para descriptografia"></textarea>
+            </div>
+            <div id="qrOptions" class="qr-options" style="display: none;">
+                <label for="dataType" title="Selecione o tipo de dados para o código QR">Tipo de Dados:</label>
+                <select id="dataType" title="Escolha o tipo de dados para o código QR">
+                    <option value="text">Texto</option>
+                    <option value="url">URL</option>
+                    <option value="email">E-mail</option>
+                    <option value="tel">Número de Telefone</option>
+                </select>
+                <label for="errorCorrection" title="Selecione o nível de correção de erros">Nível de Correção de Erros:</label>
+                <select id="errorCorrection" title="Escolha o nível de correção de erros para o código QR">
+                    <option value="L">Baixo (7%)</option>
+                    <option value="M">Médio (15%)</option>
+                    <option value="Q">Quartil (25%)</option>
+                    <option value="H">Alto (30%)</option>
+                </select>
+                <div class="slider-container">
+                    <label for="qrSize" title="Ajuste o tamanho do código QR">Tamanho do QR Code:</label>
+                    <input type="range" id="qrSize" min="32" max="500" value="300" title="Deslize para ajustar o tamanho do código QR">
+                    <span id="qrSizeValue">300 px</span>
+                </div>
+            </div>
+            <button id="encodeButton" onclick="processText('encode')" title="Clique para codificar/criptografar o texto">Codificar/Criptografar</button>
+            <button id="decodeButton" onclick="processText('decode')" title="Clique para decodificar/descriptografar o texto">Decodificar/Descriptografar</button>
+            <div id="qrCode"></div>
+            <div id="downloadButtons" class="download-buttons" style="display: none;">
+                <button onclick="downloadQR('png')" title="Baixar o código QR como imagem PNG">Baixar PNG</button>
+                <button onclick="downloadQR('jpeg')" title="Baixar o código QR como imagem JPG">Baixar JPG</button>
+                <button onclick="downloadQR('svg')" title="Baixar o código QR como imagem SVG">Baixar SVG</button>
+            </div>
+            <div id="algorithmInfo" class="algorithm-info"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentMode = 'qr';
+        const input = document.getElementById('input');
+        const keyInput = document.getElementById('keyInput');
+        const key = document.getElementById('key');
+        const rsaKeyInput = document.getElementById('rsaKeyInput');
+        const publicKey = document.getElementById('publicKey');
+        const privateKey = document.getElementById('privateKey');
+        const qrOptions = document.getElementById('qrOptions');
+        const dataType = document.getElementById('dataType');
+        const errorCorrection = document.getElementById('errorCorrection');
+        const encodeButton = document.getElementById('encodeButton');
+        const decodeButton = document.getElementById('decodeButton');
+        const downloadButtons = document.getElementById('downloadButtons');
+        const qrSize = document.getElementById('qrSize');
+        const qrSizeValue = document.getElementById('qrSizeValue');
+        const algorithmInfo = document.getElementById('algorithmInfo');
+
+        const algorithmDescriptions = {
+            '3des': 'O 3DES (Triple DES) é uma variação do DES que aplica o algoritmo três vezes a cada bloco de dados. Isso aumenta significativamente a segurança em comparação com o DES padrão, tornando-o mais resistente a ataques de força bruta.',
+            'aes': 'O AES (Advanced Encryption Standard) é um algoritmo de criptografia simétrica amplamente utilizado. Ele opera em blocos de 128 bits e suporta chaves de 128, 192 ou 256 bits. O AES é conhecido por sua segurança e eficiência.',
+            'base64': 'Base64 é um método de codificação que converte dados binários em texto ASCII. Ele usa 64 caracteres diferentes para representar os dados, tornando-os seguros para transmissão em sistemas que lidam apenas com texto.',
+            'des': 'O DES (Data Encryption Standard) é um algoritmo de criptografia simétrica que opera em blocos de 64 bits. Embora seja considerado obsoleto para muitas aplicações devido ao tamanho limitado da chave, ainda é usado em alguns sistemas legados.',
+            'md5': 'MD5 é uma função de hash criptográfica que produz um valor de 128 bits. Embora não seja mais considerado seguro para uso criptográfico devido a vulnerabilidades, ainda é amplamente usado para verificação de integridade de arquivos.',
+            'qr': 'O código QR (Quick Response) é um tipo de código de barras bidimensional que pode armazenar diversos tipos de informações. Ele pode ser lido rapidamente por dispositivos móveis e é amplamente utilizado para compartilhar URLs, texto e outros dados.',
+            'rot13': 'ROT13 é uma cifra de substituição simples que desloca cada letra do alfabeto 13 posições. É frequentemente usado para ocultar texto de forma leve, mas não oferece segurança real contra ataques sérios.',
+            'rsa': 'RSA é um algoritmo de criptografia assimétrica que utiliza um par de chaves: uma pública para criptografar e uma privada para descriptografar. É amplamente utilizado para comunicações seguras e assinaturas digitais na internet.',
+            'sha256': 'SHA-256 é uma função de hash criptográfica que produz um valor de hash de 256 bits. É amplamente utilizada para verificar a integridade de dados e em sistemas de autenticação. SHA-256 é considerada segura contra ataques de colisão.',
+            'xor': 'XOR é uma operação lógica simples usada em criptografia. Ela combina dois fluxos de bits, produzindo um resultado que pode ser revertido aplicando a mesma operação novamente. É rápida e fácil de implementar, mas não é segura para uso isolado em criptografia moderna.'
+        };
+
+        function switchTab(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelector(`.tab:nth-child(${['qr', '3des', 'aes', 'base64', 'des', 'md5', 'rot13', 'rsa', 'sha256', 'xor'].indexOf(mode) + 1})`).classList.add('active');
+            input.value = '';
+            keyInput.style.display = ['aes', 'des', '3des', 'xor'].includes(mode) ? 'block' : 'none';
+            rsaKeyInput.style.display = mode === 'rsa' ? 'block' : 'none';
+            qrOptions.style.display = mode === 'qr' ? 'block' : 'none';
+            encodeButton.style.display = mode === 'qr' ? 'none' : 'inline-block';
+            decodeButton.style.display = mode === 'qr' || mode === 'sha256' || mode === 'md5' ? 'none' : 'inline-block';
+            downloadButtons.style.display = 'none';
+            document.getElementById('qrCode').innerHTML = '';
+            algorithmInfo.textContent = algorithmDescriptions[mode];
+
+            if (mode === 'qr') {
+                generateQRCode();
+            }
+        }
+
+        async function processText(action) {
+            const text = input.value;
+            let result = '';
+
+            switch (currentMode) {
+                case 'base64':
+                    result = action === 'encode' ? btoa(text) : atob(text);
+                    break;
+                case 'aes':
+                    result = action === 'encode' ? CryptoJS.AES.encrypt(text, key.value).toString() : CryptoJS.AES.decrypt(text, key.value).toString(CryptoJS.enc.Utf8);
+                    break;
+                case 'des':
+                    result = action === 'encode' ? CryptoJS.DES.encrypt(text, key.value).toString() : CryptoJS.DES.decrypt(text, key.value).toString(CryptoJS.enc.Utf8);
+                    break;
+                case '3des':
+                    result = action === 'encode' ? CryptoJS.TripleDES.encrypt(text, key.value).toString() : CryptoJS.TripleDES.decrypt(text, key.value).toString(CryptoJS.enc.Utf8);
+                    break;
+                case 'rsa':
+                    const encrypt = new JSEncrypt();
+                    if (action === 'encode') {
+                        encrypt.setPublicKey(publicKey.value);
+                        result = encrypt.encrypt(text);
+                    } else {
+                        encrypt.setPrivateKey(privateKey.value);
+                        result = encrypt.decrypt(text);
+                    }
+                    break;
+                case 'rot13':
+                    result = rot13(text);
+                    break;
+                case 'xor':
+                    result = xorCipher(text, key.value);
+                    break;
+                case 'sha256':
+                    result = CryptoJS.SHA256(text).toString();
+                    break;
+                case 'md5':
+                    result = CryptoJS.MD5(text).toString();
+                    break;
+                case 'qr':
+                    generateQRCode();
+                    return;
+            }
+
+            input.value = result;
+        }
+
+        // ROT13 Cipher
+        function rot13(text) {
+            return text.replace(/[a-zA-Z]/g, c => String.fromCharCode((c <= 'Z' ? 90 : 122) >= (c = c.charCodeAt(0) + 13) ? c : c - 26));
+        }
+
+        // XOR Cipher
+        function xorCipher(text, key) {
+            return text.split('').map((char, index) => String.fromCharCode(char.charCodeAt(0) ^ key.charCodeAt(index % key.length))).join('');
+        }
+
+        // QR Code Generation
+        function generateQRCode() {
+            const text = input.value;
+            if (!text) return;
+
+            const qrContainer = document.getElementById('qrCode');
+            qrContainer.innerHTML = '';
+            const canvas = document.createElement('canvas');
+            qrContainer.appendChild(canvas);
+
+            let qrData = text;
+            switch (dataType.value) {
+                case 'url':
+                    qrData = text.startsWith('http') ? text : `https://${text}`;
+                    break;
+                case 'email':
+                    qrData = `mailto:${text}`;
+                    break;
+                case 'tel':
+                    qrData = `tel:${text}`;
+                    break;
+            }
+
+            QRCode.toCanvas(canvas, qrData, {
+                width: parseInt(qrSize.value),
+                height: parseInt(qrSize.value),
+                errorCorrectionLevel: errorCorrection.value
+            }, function (error) {
+                if (error) console.error(error);
+                console.log('Código QR gerado!');
+            });
+
+            downloadButtons.style.display = 'flex';
+        }
+
+        // QR Code Download
+        function downloadQR(format) {
+            const canvas = document.querySelector('#qrCode canvas');
+            let dataUrl;
+
+            if (format === 'svg') {
+                const svgString = new XMLSerializer().serializeToString(QRCode.toString(input.value, {
+                    type: 'svg',
+                    width: parseInt(qrSize.value),
+                    height: parseInt(qrSize.value),
+                    errorCorrectionLevel: errorCorrection.value
+                }));
+                dataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString);
+            } else {
+                dataUrl = canvas.toDataURL(`image/${format}`);
+            }
+
+            const link = document.createElement('a');
+            link.download = `qrcode.${format}`;
+            link.href = dataUrl;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Event listeners
+        input.addEventListener('input', () => {
+            if (currentMode === 'qr') {
+                generateQRCode();
+            }
+        });
+
+        dataType.addEventListener('change', generateQRCode);
+        errorCorrection.addEventListener('change', generateQRCode);
+        qrSize.addEventListener('input', () => {
+            qrSizeValue.textContent = `${qrSize.value} px`;
+            generateQRCode();
+        });
+
+        // Initialize the page
+        switchTab('qr');
+    </script>
+	    <footer>
+        Desenvolvido por Lincoln H. com uso de IA's - 2025
+    </footer>
+</body>
+</html>
+
