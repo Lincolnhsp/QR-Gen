@@ -1,7 +1,7 @@
 # QR-Gen
 
 Gerador de QR Code e Criptografador de Texto
-![image](https://github.com/user-attachments/assets/84b083e4-0289-4baf-a335-6a3a721f27bb)
+![image](https://github.com/user-attachments/assets/3575be2e-5c3b-4d6c-8868-70f1880f6a87)
 
 Faça o teste de descriptografar. Chave na imagem!
 U2FsdGVkX19xpjlBkq/X3Q4g7btQz36wojZIB6fwSIHIB2kSVKn575E/USVIce3ZUZpnuNqe80PNUR+qHm9RUg==
